@@ -1,32 +1,77 @@
 import express from 'express';
-import path from 'path';
 import { fileURLToPath } from 'url';
-import mainRouter from './routes/index.js'; // <-- Import your router
+import { dirname, join } from 'path';
+import { config } from './config/index.js';
+import routes from './routes/index.js';
 
-// Needed for ES modules
+// ES Modules don't have __dirname by default
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
 
+// Create Express app
 const app = express();
-const PORT = 3000;
+const { port: PORT, nodeEnv } = config;
 
-// View engine setup (EJS)
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+// ============================================
+// MIDDLEWARE
+// ============================================
 
-// Middleware
+// Parse JSON request bodies
 app.use(express.json());
+
+// Parse URL-encoded form data
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '../public')));
 
-// Use the main router
-app.use('/', mainRouter);
+// Serve static files (CSS, images) from public folder
+app.use(express.static(join(__dirname, '../public')));
 
-// Optional: catch-all route for 404
+// ============================================
+// VIEW ENGINE
+// ============================================
+
+// Use EJS as the template engine
+app.set('view engine', 'ejs');
+
+// Set the views directory
+app.set('views', join(__dirname, 'views'));
+
+// ============================================
+// ROUTES
+// ============================================
+
+// Mount all routes
+app.use('/', routes);
+
+// ============================================
+// ERROR HANDLERS
+// ============================================
+
+// 404 - Not Found
 app.use((req, res) => {
-  res.status(404).render('error', { message: 'Page not found', error: '' });
+  res.status(404).render('error', {
+    message: 'Page not found',
+    error: 'The page you are looking for does not exist.'
+  });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+// 500 - Server Error
+app.use((err, _req, res, _next) => {
+  res.status(500).render('error', {
+    message: 'Something went wrong',
+    error: err.message
+  });
 });
+
+// ============================================
+// START SERVER
+// ============================================
+
+// Only start the server if not in test mode
+if (nodeEnv !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Pokedex server running at http://localhost:${PORT}`);
+  });
+}
+
+// Export for testing
+export default app;
