@@ -55,7 +55,6 @@ export const getPokemonDetails = async (req, res) => {
   }
 };
 
-
 /**
  * Search results page
  */
@@ -82,7 +81,6 @@ export const searchPokemon = async (req, res) => {
     });
   }
 };
-
 
 /**
  * Filter by type page
