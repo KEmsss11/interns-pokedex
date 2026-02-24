@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import mainRouter from './routes/index.js'; // <-- Import your router
 
 // Needed for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -18,9 +19,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
-// TEMP TEST ROUTE
-app.get('/', (req, res) => {
-  res.send('Server is running 🚀');
+// Use the main router
+app.use('/', mainRouter);
+
+// Optional: catch-all route for 404
+app.use((req, res) => {
+  res.status(404).render('error', { message: 'Page not found', error: '' });
 });
 
 app.listen(PORT, () => {
